@@ -1,0 +1,62 @@
+name: Go
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  release:
+    release:
+      types: [published]
+    
+env:
+  VERSION: Test
+  
+jobs:
+  build_linux:
+    name: Build Linux (AMD64)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.11
+
+    - name: Install Build Depedencies
+      run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libusb-1.0-0-dev
+  
+    - name: Build Linux (AMD64)
+      run: GOOS=linux GOARCH=amd64 GO111MODULE=on go build -mod=vendor -ldflags='-X "main.Version=$VERSION"' -o dist
+
+    - name: Upload Linux Artifact
+      if: github.event.release.draft == false && github.event.release.prerelease == false 
+      uses: actions/upload-artifact@v2
+      with: 
+        name: aws-okta-linux-$GITHUB_REF
+        path: dist
+  
+  build_mac:
+    name: Build Mac (AMD64)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.11
+
+    - name: Install Build Depedencies
+      run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libusb-1.0-0-dev
+  
+    - name: Build Mac (AMD64)
+      run: GOOS=darwin GOARCH=amd64 GO111MODULE=on go build -mod=vendor -ldflags='-X "main.Version=$VERSION"' -o dist
+
+    - name: Upload Linux Artifact
+      if: github.event.release.draft == false && github.event.release.prerelease == false
+      uses: actions/upload-artifact@v2
+      with: 
+        name: aws-okta-mac-$GITHUB_REF
+        path: dist
